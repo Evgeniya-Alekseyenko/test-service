@@ -114,7 +114,114 @@
     </div>
 </template>
 
-<script></script>
+<script>
+export default {
+    data() {
+        return {
+            visitors: [
+                {
+                    id: 1,
+                    name: 'Сергій',
+                    surname: 'Сергієнко',
+                    entryTime: '09:00',
+                },
+                {
+                    id: 2,
+                    name: 'Іван',
+                    surname: 'Іваненко',
+                    entryTime: '17:30',
+                },
+                {
+                    id: 3,
+                    name: 'Петро',
+                    surname: 'Петренко',
+                    entryTime: '10:45',
+                },
+            ],
+            newVisitor: { name: '', surname: '' },
+            selectedVisitor: {},
+            showAddForm: false,
+            showEditForm: false,
+            showDeleteConfirmation: false,
+            sortDirection: {
+                name: 'asc',
+                surname: 'asc',
+                entryTime: 'asc',
+            },
+        };
+    },
+    methods: {
+        openAddVisitorForm() {
+            this.showAddForm = true;
+        },
+        addVisitor() {
+            const newVisitorId =
+                Math.max(...this.visitors.map((visitor) => visitor.id)) + 1;
+            this.newVisitor.id = newVisitorId;
+            this.newVisitor.entryTime = new Date().toLocaleTimeString();
+            this.visitors.push(this.newVisitor);
+            this.newVisitor = { name: '', surname: '' };
+            this.showAddForm = false;
+        },
+        openEditVisitorForm(visitor) {
+            this.selectedVisitor = { ...visitor };
+            this.showEditForm = true;
+        },
+        updateVisitor() {
+            const index = this.visitors.findIndex(
+                (visitor) => visitor.id === this.selectedVisitor.id
+            );
+            if (index !== -1) {
+                this.visitors[index] = { ...this.selectedVisitor };
+            }
+            this.selectedVisitor = {};
+            this.showEditForm = false;
+        },
+        confirmDeleteVisitor(visitor) {
+            this.selectedVisitor = { ...visitor };
+            this.showDeleteConfirmation = true;
+        },
+        deleteVisitor() {
+            const index = this.visitors.findIndex(
+                (visitor) => visitor.id === this.selectedVisitor.id
+            );
+            if (index !== -1) {
+                this.visitors.splice(index, 1);
+            }
+            this.selectedVisitor = {};
+            this.showDeleteConfirmation = false;
+        },
+        cancelDelete() {
+            this.selectedVisitor = {};
+            this.showDeleteConfirmation = false;
+        },
+        sortColumn(column) {
+            switch (this.sortDirection[column]) {
+                case 'asc':
+                    this.visitors.sort((a, b) => {
+                        if (a[column] && b[column]) {
+                            return a[column].localeCompare(b[column]);
+                        }
+                        return 0;
+                    });
+                    this.sortDirection[column] = 'desc';
+                    break;
+                case 'desc':
+                    this.visitors.sort((a, b) => {
+                        if (a[column] && b[column]) {
+                            return b[column].localeCompare(a[column]);
+                        }
+                        return 0;
+                    });
+                    this.sortDirection[column] = 'asc';
+                    break;
+                default:
+                    break;
+            }
+        },
+    },
+};
+</script>
 
 <style>
 table {
