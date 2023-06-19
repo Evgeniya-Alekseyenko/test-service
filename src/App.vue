@@ -20,9 +20,9 @@
                 </thead>
                 <tbody>
                     <tr v-for="visitor in visitors" :key="visitor.id">
-                        <td>{{ visitor.name }}</td>
-                        <td>{{ visitor.surname }}</td>
-                        <td>{{ visitor.entryTime }}</td>
+                        <td>{{ visitor.first_name }}</td>
+                        <td>{{ visitor.last_name }}</td>
+                        <td>{{ visitor.time }}</td>
                         <td>
                             <div class="btn-container">
                                 <button
@@ -50,13 +50,13 @@
                 <h2>Додати нового відвідувача</h2>
                 <form @submit.prevent="addVisitor" class="form">
                     <input
-                        v-model="newVisitor.name"
+                        v-model="newVisitor.first_name"
                         placeholder="Ім'я"
                         required
                         class="form-input"
                     />
                     <input
-                        v-model="newVisitor.surname"
+                        v-model="newVisitor.last_name"
                         placeholder="Прізвище"
                         required
                         class="form-input"
@@ -76,13 +76,13 @@
                 <h2>Змінити відвідувача</h2>
                 <form @submit.prevent="updateVisitor" class="form">
                     <input
-                        v-model="selectedVisitor.name"
+                        v-model="selectedVisitor.first_name"
                         placeholder="Ім'я"
                         required
                         class="form-input"
                     />
                     <input
-                        v-model="selectedVisitor.surname"
+                        v-model="selectedVisitor.last_name"
                         placeholder="Прізвище"
                         required
                         class="form-input"
@@ -95,7 +95,10 @@
 
             <div v-if="showDeleteConfirmation">
                 <h2>Ви впевнені, що хочете видалити цього відвідувача?</h2>
-                <p>{{ selectedVisitor.name }} {{ selectedVisitor.surname }}</p>
+                <p>
+                    {{ selectedVisitor.first_name }}
+                    {{ selectedVisitor.last_name }}
+                </p>
                 <button
                     @click="deleteVisitor"
                     class="btn btn-danger form-button"
@@ -115,38 +118,48 @@
 </template>
 
 <script>
+import axios from 'axios';
+
+const ROOT_URL =
+    'https://zhmc97zap2.execute-api.eu-central-1.amazonaws.com/visitors';
+
+let visitors_list = await axios
+    .get(ROOT_URL)
+    .then((response) => response.data.Items);
+
 export default {
     data() {
         return {
-            visitors: [
-                {
-                    id: 1,
-                    name: 'Сергій',
-                    surname: 'Сергієнко',
-                    entryTime: '09:00',
-                },
-                {
-                    id: 2,
-                    name: 'Іван',
-                    surname: 'Іваненко',
-                    entryTime: '17:30',
-                },
-                {
-                    id: 3,
-                    name: 'Петро',
-                    surname: 'Петренко',
-                    entryTime: '10:45',
-                },
-            ],
-            newVisitor: { name: '', surname: '' },
+            visitors: visitors_list,
+            // visitors: [
+            //     {
+            //         id: 1,
+            //         first_name: 'Сергій',
+            //         last_name: 'Сергієнко',
+            //         time: '09:00',
+            //     },
+            //     {
+            //         id: 2,
+            //         first_name: 'Іван',
+            //         last_name: 'Іваненко',
+            //         time: '17:30',
+            //     },
+            //     {
+            //         id: 3,
+            //         first_name: 'Петро',
+            //         last_name: 'Петренко',
+            //         time: '10:45',
+            //     },
+            // ],
+            newVisitor: { first_name: '', last_name: '' },
             selectedVisitor: {},
             showAddForm: false,
             showEditForm: false,
             showDeleteConfirmation: false,
             sortDirection: {
-                name: 'asc',
-                surname: 'asc',
-                entryTime: 'asc',
+                first_name: 'asc',
+                last_name: 'asc',
+                time: 'asc',
             },
         };
     },
@@ -154,14 +167,35 @@ export default {
         openAddVisitorForm() {
             this.showAddForm = true;
         },
-        addVisitor() {
-            const newVisitorId =
-                Math.max(...this.visitors.map((visitor) => visitor.id)) + 1;
-            this.newVisitor.id = newVisitorId;
-            this.newVisitor.entryTime = new Date().toLocaleTimeString();
-            this.visitors.push(this.newVisitor);
-            this.newVisitor = { name: '', surname: '' };
-            this.showAddForm = false;
+        // addVisitor() {
+        //     const newVisitorId =
+        //         Math.max(...this.visitors.map((visitor) => visitor.id)) + 1;
+        //     this.newVisitor.id = newVisitorId;
+        //     this.newVisitor.entryTime = new Date().toLocaleTimeString();
+        //     this.visitors.push(this.newVisitor);
+        //     this.newVisitor = { name: '', surname: '' };
+        //     this.showAddForm = false;
+        // },
+        async addVisitor() {
+            try {
+                // const visitor = {
+                //     name: 'Jane DOe',
+                //     time: `${new Date().toISOString()}`,
+                // };
+                const visitor = {
+                    first_name: this.newVisitor.first_name,
+                    last_name: this.newVisitor.last_name,
+                    time: new Date().toISOString(),
+                };
+
+                const response = await axios.post(
+                    'https://zhmc97zap2.execute-api.eu-central-1.amazonaws.com/visitors',
+                    visitor
+                );
+                console.log(response.data); // Вывод данных, полученных в ответ на POST-запрос
+            } catch (error) {
+                console.error(error);
+            }
         },
         openEditVisitorForm(visitor) {
             this.selectedVisitor = { ...visitor };
