@@ -6,8 +6,75 @@
         <button class="btn btn-primary mb-5" @click="openAddVisitorForm">
             Додати нового відвідувача
         </button>
+        <div v-if="showAddForm">
+            <h2>Додати нового відвідувача</h2>
+            <div
+                class="container-sm py-4 px-4 d-flex flex-column justify-content-center align-items-center"
+            >
+                <form @submit.prevent="addVisitor" class="form">
+                    <input
+                        v-model="newVisitor.first_name"
+                        placeholder="Ім'я"
+                        required
+                        class="form-input"
+                    />
+                    <input
+                        v-model="newVisitor.last_name"
+                        placeholder="Прізвище"
+                        required
+                        class="form-input"
+                    />
+                    <button id="add" type="submit" class="btn btn-primary">
+                        Додати
+                    </button>
+                </form>
+            </div>
+        </div>
+
         <div
-            class="container py-4 px-4 border shadow mt-2 d-flex flex-column justify-content-center align-items-center"
+            class="container-sm d-flex flex-column justify-content-center align-items-center"
+        >
+            <div v-if="showEditForm">
+                <h2>Змінити відвідувача</h2>
+                <form @submit.prevent="updateVisitor" class="form">
+                    <input
+                        v-model="selectedVisitor.first_name"
+                        placeholder="Ім'я"
+                        required
+                        class="form-input"
+                    />
+                    <input
+                        v-model="selectedVisitor.last_name"
+                        placeholder="Прізвище"
+                        required
+                        class="form-input"
+                    />
+                    <button type="submit" class="btn btn-primary form-button">
+                        Зберегти
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <div v-if="showDeleteConfirmation">
+            <h2>Ви впевнені, що хочете видалити цього відвідувача?</h2>
+            <p>
+                {{ selectedVisitor.first_name }}
+                {{ selectedVisitor.last_name }}
+            </p>
+            <button @click="deleteVisitor" class="btn btn-danger form-button">
+                Підтвердити видалення
+            </button>
+            <button
+                @click="cancelDelete"
+                class="btn btn-primary form-button"
+                style="margin-left: 10px"
+            >
+                Скасувати
+            </button>
+        </div>
+        <div
+            class="container border shadow mt-2 d-flex flex-column justify-content-center align-items-center"
         >
             <table class="table">
                 <thead>
@@ -45,74 +112,6 @@
                     </tr>
                 </tbody>
             </table>
-
-            <div v-if="showAddForm">
-                <h2>Додати нового відвідувача</h2>
-                <form @submit.prevent="addVisitor" class="form">
-                    <input
-                        v-model="newVisitor.first_name"
-                        placeholder="Ім'я"
-                        required
-                        class="form-input"
-                    />
-                    <input
-                        v-model="newVisitor.last_name"
-                        placeholder="Прізвище"
-                        required
-                        class="form-input"
-                    />
-                    <button
-                        id="add"
-                        type="submit"
-                        class="btn btn-primary"
-                        style="margin-left: 10px"
-                    >
-                        Додати
-                    </button>
-                </form>
-            </div>
-
-            <div v-if="showEditForm">
-                <h2>Змінити відвідувача</h2>
-                <form @submit.prevent="updateVisitor" class="form">
-                    <input
-                        v-model="selectedVisitor.first_name"
-                        placeholder="Ім'я"
-                        required
-                        class="form-input"
-                    />
-                    <input
-                        v-model="selectedVisitor.last_name"
-                        placeholder="Прізвище"
-                        required
-                        class="form-input"
-                    />
-                    <button type="submit" class="btn btn-primary form-button">
-                        Зберегти
-                    </button>
-                </form>
-            </div>
-
-            <div v-if="showDeleteConfirmation">
-                <h2>Ви впевнені, що хочете видалити цього відвідувача?</h2>
-                <p>
-                    {{ selectedVisitor.first_name }}
-                    {{ selectedVisitor.last_name }}
-                </p>
-                <button
-                    @click="deleteVisitor"
-                    class="btn btn-danger form-button"
-                >
-                    Підтвердити видалення
-                </button>
-                <button
-                    @click="cancelDelete"
-                    class="btn btn-primary form-button"
-                    style="margin-left: 10px"
-                >
-                    Скасувати
-                </button>
-            </div>
         </div>
     </div>
 </template>
@@ -131,26 +130,6 @@ export default {
     data() {
         return {
             visitors: visitors_list,
-            // visitors: [
-            //     {
-            //         id: 1,
-            //         first_name: 'Сергій',
-            //         last_name: 'Сергієнко',
-            //         time: '09:00',
-            //     },
-            //     {
-            //         id: 2,
-            //         first_name: 'Іван',
-            //         last_name: 'Іваненко',
-            //         time: '17:30',
-            //     },
-            //     {
-            //         id: 3,
-            //         first_name: 'Петро',
-            //         last_name: 'Петренко',
-            //         time: '10:45',
-            //     },
-            // ],
             newVisitor: { first_name: '', last_name: '' },
             selectedVisitor: {},
             showAddForm: false,
@@ -167,32 +146,32 @@ export default {
         openAddVisitorForm() {
             this.showAddForm = true;
         },
-        // addVisitor() {
-        //     const newVisitorId =
-        //         Math.max(...this.visitors.map((visitor) => visitor.id)) + 1;
-        //     this.newVisitor.id = newVisitorId;
-        //     this.newVisitor.entryTime = new Date().toLocaleTimeString();
-        //     this.visitors.push(this.newVisitor);
-        //     this.newVisitor = { name: '', surname: '' };
-        //     this.showAddForm = false;
-        // },
+        closeModal() {
+            this.showAddForm = false;
+            this.showEditForm = false;
+            this.showDeleteConfirmation = false;
+        },
+        async fetchVisitorsList() {
+            try {
+                const response = await axios.get(ROOT_URL);
+                this.visitors = response.data.Items;
+            } catch (error) {
+                console.error(error);
+            }
+        },
         async addVisitor() {
             try {
-                // const visitor = {
-                //     name: 'Jane DOe',
-                //     time: `${new Date().toISOString()}`,
-                // };
                 const visitor = {
                     first_name: this.newVisitor.first_name,
                     last_name: this.newVisitor.last_name,
                     time: new Date().toISOString(),
                 };
 
-                const response = await axios.post(
-                    'https://zhmc97zap2.execute-api.eu-central-1.amazonaws.com/visitors',
-                    visitor
-                );
+                const response = await axios.post(ROOT_URL, visitor);
                 console.log(response.data); // Вывод данных, полученных в ответ на POST-запрос
+                this.showAddForm = false;
+                // Обновление списка пользователей
+                this.fetchVisitorsList();
             } catch (error) {
                 console.error(error);
             }
@@ -300,6 +279,9 @@ th {
 }
 
 @media (max-width: 460px) {
+    table {
+        width: 90%;
+    }
     div {
         font-size: 0.7rem;
     }
@@ -314,7 +296,7 @@ th {
     }
 }
 
-@media (max-width: 770px) {
+@media (max-width: 991px) {
     .btn-container {
         display: flex;
         flex-direction: column;
