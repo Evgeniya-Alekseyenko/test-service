@@ -3,32 +3,38 @@
         <p class="text-center font-weight-bold display-4">
             Сервіс з ручного обліку відвідувачів
         </p>
-        <button class="btn btn-primary mb-5" @click="openAddVisitorForm">
-            Додати нового відвідувача
-        </button>
-        <div v-if="showAddForm">
-            <h2>Додати нового відвідувача</h2>
-            <div
-                class="container-sm py-4 px-4 d-flex flex-column justify-content-center align-items-center"
+
+        <div>
+            <button @click="showDialog" class="btn btn-primary mb-2 p-2">
+                Додати нового відвідувача
+            </button>
+            <Dialog
+                v-if="dialogVisible"
+                :show="dialogVisible"
+                @close="hideDialog"
             >
-                <form @submit.prevent="addVisitor" class="form">
-                    <input
-                        v-model="newVisitor.first_name"
-                        placeholder="Ім'я"
-                        required
-                        class="form-input"
-                    />
-                    <input
-                        v-model="newVisitor.last_name"
-                        placeholder="Прізвище"
-                        required
-                        class="form-input"
-                    />
-                    <button id="add" type="submit" class="btn btn-primary">
-                        Додати
-                    </button>
-                </form>
-            </div>
+                <div
+                    class="container-sm py-4 px-4 d-flex flex-column justify-content-center align-items-center"
+                >
+                    <form @submit.prevent="addVisitor" class="form">
+                        <input
+                            v-model="newVisitor.first_name"
+                            placeholder="Ім'я"
+                            required
+                            class="form-input"
+                        />
+                        <input
+                            v-model="newVisitor.last_name"
+                            placeholder="Прізвище"
+                            required
+                            class="form-input"
+                        />
+                        <button id="add" type="submit" class="btn btn-primary">
+                            Додати
+                        </button>
+                    </form>
+                </div>
+            </Dialog>
         </div>
 
         <div
@@ -94,7 +100,7 @@
                             <div class="btn-container">
                                 <button
                                     id="edit"
-                                    class="btn btn-secondary mb-1"
+                                    class="btn btn-success mb-1"
                                     @click="openEditVisitorForm(visitor)"
                                 >
                                     Змінити
@@ -118,6 +124,7 @@
 
 <script>
 import axios from 'axios';
+import Dialog from './Dialog.vue';
 
 const ROOT_URL =
     'https://zhmc97zap2.execute-api.eu-central-1.amazonaws.com/visitors';
@@ -127,6 +134,9 @@ let visitors_list = await axios
     .then((response) => response.data.Items);
 
 export default {
+    components: {
+        Dialog,
+    },
     data() {
         return {
             visitors: visitors_list,
@@ -140,16 +150,19 @@ export default {
                 last_name: 'asc',
                 time: 'asc',
             },
+            dialogVisible: false,
         };
     },
     methods: {
+        showDialog() {
+            this.dialogVisible = true;
+        },
+
+        hideDialog() {
+            this.dialogVisible = false;
+        },
         openAddVisitorForm() {
             this.showAddForm = true;
-        },
-        closeModal() {
-            this.showAddForm = false;
-            this.showEditForm = false;
-            this.showDeleteConfirmation = false;
         },
         async fetchVisitorsList() {
             try {
@@ -168,10 +181,14 @@ export default {
                 };
 
                 const response = await axios.post(ROOT_URL, visitor);
-                console.log(response.data); // Вывод данных, полученных в ответ на POST-запрос
+                console.log(response.data);
                 this.showAddForm = false;
                 // Обновление списка пользователей
                 this.fetchVisitorsList();
+                //Закрываем модальное окно при добавлении нового посетителя,и очищаем поля ввода
+                this.dialogVisible = false;
+                this.newVisitor.first_name = '';
+                this.newVisitor.last_name = '';
             } catch (error) {
                 console.error(error);
             }
@@ -276,6 +293,25 @@ th {
 
 .form-button:hover {
     background-color: #0056b3;
+}
+
+.dialog {
+    top: 0;
+    bottom: 0;
+    right: 0;
+    left: 0;
+    background: rgba(0, 0, 0, 0.5);
+    position: fixed;
+    display: flex;
+}
+
+.dialog__content {
+    margin: auto;
+    background: white;
+    border-radius: 12px;
+    min-height: 50px;
+    min-width: 300px;
+    padding: 20px;
 }
 
 @media (max-width: 460px) {
