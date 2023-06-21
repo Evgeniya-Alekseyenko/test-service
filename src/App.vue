@@ -85,17 +85,17 @@
             <table class="table">
                 <thead>
                     <tr>
-                        <th @click="sortColumn('name')">Ім'я</th>
-                        <th @click="sortColumn('surname')">Прізвище</th>
-                        <th @click="sortColumn('entryTime')">Час створення</th>
+                        <th @click="sortColumn('first_name')">Ім'я</th>
+                        <th @click="sortColumn('last_name')">Прізвище</th>
+                        <th @click="sortColumn('time')">Час створення</th>
                         <th>Дії</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <tr v-for="visitor in visitors" :key="visitor.id">
+                    <tr v-for="visitor in sortedVisitors" :key="visitor.id">
                         <td>{{ visitor.first_name }}</td>
                         <td>{{ visitor.last_name }}</td>
-                        <td>{{ visitor.time }}</td>
+                        <td>{{ formatTime(visitor.time) }}</td>
                         <td>
                             <div class="btn-container">
                                 <button
@@ -153,16 +153,43 @@ export default {
             dialogVisible: false,
         };
     },
+    computed: {
+        sortedVisitors() {
+            return this.visitors.sort((a, b) => {
+                const column = this.sortedColumn;
+                const direction = this.sortDirection[column];
+
+                if (column === 'time') {
+                    const timeA = new Date(a[column]);
+                    const timeB = new Date(b[column]);
+
+                    if (direction === 'asc') {
+                        return timeA - timeB;
+                    } else {
+                        return timeB - timeA;
+                    }
+                } else {
+                    return direction === 'asc'
+                        ? a[column].localeCompare(b[column])
+                        : b[column].localeCompare(a[column]);
+                }
+            });
+        },
+        sortedColumn() {
+            return Object.keys(this.sortDirection).find(
+                (column) => this.sortDirection[column] !== ''
+            );
+        },
+    },
     methods: {
         showDialog() {
             this.dialogVisible = true;
         },
-
         hideDialog() {
             this.dialogVisible = false;
         },
-        openAddVisitorForm() {
-            this.showAddForm = true;
+        formatTime(time) {
+            return new Date(time).toLocaleString();
         },
         async fetchVisitorsList() {
             try {
@@ -226,28 +253,16 @@ export default {
             this.showDeleteConfirmation = false;
         },
         sortColumn(column) {
-            switch (this.sortDirection[column]) {
-                case 'asc':
-                    this.visitors.sort((a, b) => {
-                        if (a[column] && b[column]) {
-                            return a[column].localeCompare(b[column]);
-                        }
-                        return 0;
-                    });
-                    this.sortDirection[column] = 'desc';
-                    break;
-                case 'desc':
-                    this.visitors.sort((a, b) => {
-                        if (a[column] && b[column]) {
-                            return b[column].localeCompare(a[column]);
-                        }
-                        return 0;
-                    });
-                    this.sortDirection[column] = 'asc';
-                    break;
-                default:
-                    break;
+            if (this.sortDirection[column] === 'asc') {
+                this.sortDirection[column] = 'desc';
+            } else {
+                this.sortDirection[column] = 'asc';
             }
+            Object.keys(this.sortDirection).forEach((key) => {
+                if (key !== column) {
+                    this.sortDirection[key] = '';
+                }
+            });
         },
     },
 };
