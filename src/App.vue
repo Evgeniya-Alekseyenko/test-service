@@ -1,11 +1,14 @@
 <template>
     <div class="container mt-4">
-        <p class="text-center font-weight-bold display-4 gradient-text">
+        <p class="text-center fw-bold display-3 gradient-text">
             Сервіс з ручного обліку відвідувачів
         </p>
 
         <div>
-            <button @click="showDialog" class="btn btn-primary mb-4 p-2">
+            <button
+                @click="showDialog"
+                class="btn btn-primary mb-4 p-3 fw-bold"
+            >
                 Додати нового відвідувача
             </button>
             <Dialog
@@ -41,61 +44,89 @@
             </Dialog>
         </div>
 
-        <div
-            class="container-sm d-flex flex-column justify-content-center align-items-center"
+        <Dialog
+            v-if="showEditForm"
+            :show="showEditForm"
+            @close="cancelEditVisitorForm"
         >
-            <div v-if="showEditForm">
-                <h2>Змінити відвідувача</h2>
-                <form @submit.prevent="updateVisitor" class="form">
-                    <input
-                        v-model="selectedVisitor.first_name"
-                        placeholder="Ім'я"
-                        required
-                        class="form-input"
-                    />
-                    <input
-                        v-model="selectedVisitor.last_name"
-                        placeholder="Прізвище"
-                        required
-                        class="form-input"
-                    />
-                    <button type="submit" class="btn btn-primary form-button">
-                        Зберегти
-                    </button>
-                </form>
-            </div>
-        </div>
-
-        <div v-if="showDeleteConfirmation">
-            <h2>Ви впевнені, що хочете видалити цього відвідувача?</h2>
-            <p>
-                {{ selectedVisitor.first_name }}
-                {{ selectedVisitor.last_name }}
-            </p>
-            <button @click="deleteVisitor" class="btn btn-danger form-button">
-                Підтвердити видалення
-            </button>
-            <button
-                @click="cancelDelete"
-                class="btn btn-primary form-button"
-                style="margin-left: 10px"
+            <div
+                class="container-sm d-flex flex-column justify-content-center align-items-center"
             >
-                Скасувати
-            </button>
-        </div>
-        <table
-            class="table table-hover table-bordered table-condensed table-striped"
+                <div v-if="showEditForm">
+                    <h2>Змінити відвідувача</h2>
+                    <form @submit.prevent="updateVisitor" class="form">
+                        <input
+                            v-model="selectedVisitor.first_name"
+                            placeholder="Ім'я"
+                            required
+                            class="form-input"
+                        />
+                        <input
+                            v-model="selectedVisitor.last_name"
+                            placeholder="Прізвище"
+                            required
+                            class="form-input"
+                        />
+                        <button
+                            type="submit"
+                            class="btn btn-primary form-button"
+                        >
+                            Зберегти
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </Dialog>
+
+        <Dialog
+            v-if="showDeleteConfirmation"
+            :show="showDeleteConfirmation"
+            @close="cancelDeleteVisitorForm"
         >
-            <thead>
+            <div v-if="showDeleteConfirmation">
+                <h2>Ви впевнені, що хочете видалити цього відвідувача?</h2>
+                <p>
+                    {{ selectedVisitor.first_name }}
+                    {{ selectedVisitor.last_name }}
+                </p>
+                <button
+                    @click="deleteVisitor"
+                    class="btn btn-danger form-button mb-2"
+                >
+                    Підтвердити видалення
+                </button>
+                <button
+                    @click="cancelDelete"
+                    class="btn btn-primary form-button mb-2 ms-2"
+                >
+                    Скасувати
+                </button>
+            </div>
+        </Dialog>
+
+        <table
+            class="table table-hover table-bordered table-condensed table-striped border-success rounded"
+        >
+            <thead class="table-success border-success">
                 <tr>
-                    <th @click="sortColumn('first_name')">Ім'я</th>
-                    <th @click="sortColumn('last_name')">Прізвище</th>
-                    <th @click="sortColumn('time')">Час створення</th>
-                    <th>Дії</th>
+                    <th class="py-3">№</th>
+
+                    <th @click="sortColumn('first_name')" class="py-3">Ім'я</th>
+                    <th @click="sortColumn('last_name')" class="py-3">
+                        Прізвище
+                    </th>
+                    <th @click="sortColumn('time')" class="py-3">
+                        Час створення
+                    </th>
+                    <th class="py-3">Дії</th>
                 </tr>
             </thead>
             <tbody>
-                <tr v-for="visitor in sortedVisitors" :key="visitor.id">
+                <tr
+                    v-for="(visitor, index) in numberingVisitors"
+                    :key="visitor.id"
+                >
+                    <td>{{ visitor.index }}</td>
                     <td>{{ visitor.first_name }}</td>
                     <td>{{ visitor.last_name }}</td>
                     <td>{{ formatTime(visitor.time) }}</td>
@@ -111,7 +142,6 @@
                             <button
                                 id="delete-button"
                                 class="btn btn-danger mb-1"
-                                style="margin-left: 10px"
                                 @click="confirmDeleteVisitor(visitor)"
                             >
                                 Видалити
@@ -182,6 +212,14 @@ export default {
                 (column) => this.sortDirection[column] !== ''
             );
         },
+        numberingVisitors() {
+            return this.sortedVisitors.map((visitor, index) => {
+                return {
+                    ...visitor,
+                    index: index + 1,
+                };
+            });
+        },
     },
     methods: {
         showDialog() {
@@ -209,8 +247,7 @@ export default {
                     time: new Date().toISOString(),
                 };
 
-                const response = await axios.post(ROOT_URL, visitor);
-                console.log(response.data);
+                await axios.post(ROOT_URL, visitor);
                 this.showAddForm = false;
                 // Обновление списка пользователей
                 this.fetchVisitorsList();
@@ -221,10 +258,6 @@ export default {
             } catch (error) {
                 console.error(error);
             }
-        },
-        openEditVisitorForm(visitor) {
-            this.selectedVisitor = { ...visitor };
-            this.showEditForm = true;
         },
         async updateVisitor() {
             try {
@@ -238,7 +271,6 @@ export default {
                 };
 
                 const response = await axios.put(updateUrl, updatedVisitor);
-                console.log(response.data);
 
                 // Очистка данных выбранного посетителя и скрытие формы редактирования
                 this.selectedVisitor = {};
@@ -250,22 +282,45 @@ export default {
                 console.error(error.response.data);
             }
         },
+        openEditVisitorForm(visitor) {
+            this.selectedVisitor = { ...visitor };
+            this.showEditForm = true;
+        },
+        cancelEditVisitorForm() {
+            this.showEditForm = false;
+        },
+        async deleteVisitor() {
+            try {
+                const { id, first_name, last_name } = this.selectedVisitor;
+                const updateUrl = `${ROOT_URL}/${id}`;
+
+                const updatedVisitor = {
+                    first_name: first_name,
+                    last_name: last_name,
+                    time: new Date().toISOString(),
+                };
+
+                await axios.delete(updateUrl, updatedVisitor);
+
+                // // Очистка данных выбранного посетителя и скрытие формы редактирования
+                this.selectedVisitor = {};
+                this.showDeleteConfirmation = false;
+
+                // Обновление списка посетителей
+                this.fetchVisitorsList();
+            } catch (error) {
+                console.error(error.response.data);
+            }
+        },
         confirmDeleteVisitor(visitor) {
             this.selectedVisitor = { ...visitor };
             this.showDeleteConfirmation = true;
         },
-        deleteVisitor() {
-            const index = this.visitors.findIndex(
-                (visitor) => visitor.id === this.selectedVisitor.id
-            );
-            if (index !== -1) {
-                this.visitors.splice(index, 1);
-            }
+        cancelDelete() {
             this.selectedVisitor = {};
             this.showDeleteConfirmation = false;
         },
-        cancelDelete() {
-            this.selectedVisitor = {};
+        cancelDeleteVisitorForm() {
             this.showDeleteConfirmation = false;
         },
         sortColumn(column) {
@@ -292,11 +347,14 @@ table {
 th,
 td {
     padding: 8px;
-    text-align: left;
 }
 
 th {
     cursor: pointer;
+}
+
+tr {
+    text-align: center;
 }
 
 .form {
@@ -355,7 +413,11 @@ th {
 .btn-container {
     display: flex;
     align-items: center;
-    justify-content: center;
+    justify-content: space-evenly;
+}
+#delete-button,
+#edit-button {
+    width: 6rem;
 }
 
 @media (max-width: 460px) {
