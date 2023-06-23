@@ -1,11 +1,11 @@
 <template>
     <div class="container mt-4">
-        <p class="text-center font-weight-bold display-4">
+        <p class="text-center font-weight-bold display-4 gradient-text">
             Сервіс з ручного обліку відвідувачів
         </p>
 
         <div>
-            <button @click="showDialog" class="btn btn-primary mb-2 p-2">
+            <button @click="showDialog" class="btn btn-primary mb-4 p-2">
                 Додати нового відвідувача
             </button>
             <Dialog
@@ -29,7 +29,11 @@
                             required
                             class="form-input"
                         />
-                        <button id="add" type="submit" class="btn btn-primary">
+                        <button
+                            id="add-button"
+                            type="submit"
+                            class="btn btn-primary"
+                        >
                             Додати
                         </button>
                     </form>
@@ -79,46 +83,44 @@
                 Скасувати
             </button>
         </div>
-        <div
-            class="container border shadow mt-2 d-flex flex-column justify-content-center align-items-center"
+        <table
+            class="table table-hover table-bordered table-condensed table-striped"
         >
-            <table class="table">
-                <thead>
-                    <tr>
-                        <th @click="sortColumn('first_name')">Ім'я</th>
-                        <th @click="sortColumn('last_name')">Прізвище</th>
-                        <th @click="sortColumn('time')">Час створення</th>
-                        <th>Дії</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr v-for="visitor in sortedVisitors" :key="visitor.id">
-                        <td>{{ visitor.first_name }}</td>
-                        <td>{{ visitor.last_name }}</td>
-                        <td>{{ formatTime(visitor.time) }}</td>
-                        <td>
-                            <div class="btn-container">
-                                <button
-                                    id="edit"
-                                    class="btn btn-success mb-1"
-                                    @click="openEditVisitorForm(visitor)"
-                                >
-                                    Змінити
-                                </button>
-                                <button
-                                    id="delete"
-                                    class="btn btn-danger mb-1"
-                                    style="margin-left: 10px"
-                                    @click="confirmDeleteVisitor(visitor)"
-                                >
-                                    Видалити
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
+            <thead>
+                <tr>
+                    <th @click="sortColumn('first_name')">Ім'я</th>
+                    <th @click="sortColumn('last_name')">Прізвище</th>
+                    <th @click="sortColumn('time')">Час створення</th>
+                    <th>Дії</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr v-for="visitor in sortedVisitors" :key="visitor.id">
+                    <td>{{ visitor.first_name }}</td>
+                    <td>{{ visitor.last_name }}</td>
+                    <td>{{ formatTime(visitor.time) }}</td>
+                    <td>
+                        <div class="btn-container">
+                            <button
+                                id="edit-button"
+                                class="btn btn-success mb-1"
+                                @click="openEditVisitorForm(visitor)"
+                            >
+                                Змінити
+                            </button>
+                            <button
+                                id="delete-button"
+                                class="btn btn-danger mb-1"
+                                style="margin-left: 10px"
+                                @click="confirmDeleteVisitor(visitor)"
+                            >
+                                Видалити
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
     </div>
 </template>
 
@@ -224,15 +226,29 @@ export default {
             this.selectedVisitor = { ...visitor };
             this.showEditForm = true;
         },
-        updateVisitor() {
-            const index = this.visitors.findIndex(
-                (visitor) => visitor.id === this.selectedVisitor.id
-            );
-            if (index !== -1) {
-                this.visitors[index] = { ...this.selectedVisitor };
+        async updateVisitor() {
+            try {
+                const { id, first_name, last_name } = this.selectedVisitor;
+                const updateUrl = `${ROOT_URL}/${id}`;
+
+                const updatedVisitor = {
+                    first_name: first_name,
+                    last_name: last_name,
+                    time: new Date().toISOString(),
+                };
+
+                const response = await axios.put(updateUrl, updatedVisitor);
+                console.log(response.data);
+
+                // Очистка данных выбранного посетителя и скрытие формы редактирования
+                this.selectedVisitor = {};
+                this.showEditForm = false;
+
+                // Обновление списка посетителей
+                this.fetchVisitorsList();
+            } catch (error) {
+                console.error(error.response.data);
             }
-            this.selectedVisitor = {};
-            this.showEditForm = false;
         },
         confirmDeleteVisitor(visitor) {
             this.selectedVisitor = { ...visitor };
@@ -329,9 +345,23 @@ th {
     padding: 20px;
 }
 
+.gradient-text {
+    background: linear-gradient(45deg, #23c77b, #0f86d6);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.btn-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
 @media (max-width: 460px) {
-    table {
-        width: 90%;
+    th,
+    td {
+        font-size: 0.6rem;
     }
     div {
         font-size: 0.7rem;
@@ -339,9 +369,9 @@ th {
     p.display-4 {
         font-size: 1.5rem;
     }
-    #delete,
-    #edit,
-    #add {
+    #delete-button,
+    #edit-button,
+    #add-button {
         font-size: 0.7rem;
         padding: 0.3rem 0.5rem;
     }
@@ -352,7 +382,6 @@ th {
         display: flex;
         flex-direction: column;
         align-items: center;
-        margin-bottom: 5px;
     }
 }
 </style>
