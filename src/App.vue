@@ -91,15 +91,9 @@
                 </p>
                 <button
                     @click="deleteVisitor"
-                    class="btn btn-danger form-button mb-2"
+                    class="btn btn-primary form-button mb-2"
                 >
                     Підтвердити видалення
-                </button>
-                <button
-                    @click="cancelDelete"
-                    class="btn btn-primary form-button mb-2 ms-2"
-                >
-                    Скасувати
                 </button>
             </div>
         </Dialog>
@@ -159,11 +153,11 @@ import axios from 'axios';
 import Dialog from './Dialog.vue';
 
 const ROOT_URL =
-    'https://zhmc97zap2.execute-api.eu-central-1.amazonaws.com/visitors';
+    'https://refvawpiqk.execute-api.eu-central-1.amazonaws.com/visitors-api';
 
 let visitors_list = await axios
     .get(ROOT_URL)
-    .then((response) => response.data.Items);
+    .then((response) => response.data.data.Items);
 
 export default {
     components: {
@@ -234,7 +228,7 @@ export default {
         async fetchVisitorsList() {
             try {
                 const response = await axios.get(ROOT_URL);
-                this.visitors = response.data.Items;
+                this.visitors = response.data.data.Items;
             } catch (error) {
                 console.error(error);
             }
@@ -244,7 +238,6 @@ export default {
                 const visitor = {
                     first_name: this.newVisitor.first_name,
                     last_name: this.newVisitor.last_name,
-                    time: new Date().toISOString(),
                 };
 
                 await axios.post(ROOT_URL, visitor);
@@ -267,10 +260,9 @@ export default {
                 const updatedVisitor = {
                     first_name: first_name,
                     last_name: last_name,
-                    time: new Date().toISOString(),
                 };
 
-                const response = await axios.put(updateUrl, updatedVisitor);
+                await axios.put(updateUrl, updatedVisitor);
 
                 // Очистка данных выбранного посетителя и скрытие формы редактирования
                 this.selectedVisitor = {};
@@ -297,7 +289,6 @@ export default {
                 const updatedVisitor = {
                     first_name: first_name,
                     last_name: last_name,
-                    time: new Date().toISOString(),
                 };
 
                 await axios.delete(updateUrl, updatedVisitor);

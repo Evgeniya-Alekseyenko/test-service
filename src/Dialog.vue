@@ -2,7 +2,9 @@
     <div class="dialog" v-if="show" @click.stop="hideDialog">
         <div class="dialog__content" @click.stop>
             <slot></slot>
-            <button @click="hideDialog" class="btn btn-danger">Close</button>
+            <button @click="hideDialog" class="btn btn-danger">
+                Скасувати
+            </button>
         </div>
     </div>
 </template>
