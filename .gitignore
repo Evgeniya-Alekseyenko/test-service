@@ -1,5 +1,7 @@
-.DS_Store
+# package directories
 node_modules
+jspm_packages
+.DS_Store
 /dist
 
 
@@ -21,3 +23,6 @@ pnpm-debug.log*
 *.njsproj
 *.sln
 *.sw?
+
+# Serverless directories
+.serverless

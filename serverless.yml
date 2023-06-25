@@ -1,0 +1,97 @@
+# Welcome to Serverless!
+#
+# This file is the main config file for your service.
+# It's very minimal at this point and uses default values.
+# You can always add more config options for more control.
+# We've included some commented out config examples here.
+# Just uncomment any of them to get that config option.
+#
+# For full config options, check the docs:
+#    docs.serverless.com
+#
+# Happy Coding!
+
+service: visitors
+frameworkVersion: '3'
+
+provider:
+    name: aws
+    runtime: nodejs16.x
+    stage: dev
+    region: eu-central-1
+    httpApi:
+        cors: true
+
+    environment:
+        VISITORS_TABLE: ${self:service}-${opt:stage, self:provider.stage}
+
+    iamRoleStatements:
+        - Effect: Allow
+          Action:
+              - dynamodb:Query
+              - dynamodb:Scan
+              - dynamodb:GetItem
+              - dynamodb:PutItem
+              - dynamodb:DeleteItem
+          Resource: '*'
+
+functions:
+    visitorsPost:
+        handler: api/visitors.post
+        memorySize: 128
+        description: POST a new Visitor.
+        events:
+            - httpApi:
+                  path: /visitors-api
+                  method: POST
+
+    visitorsList:
+        handler: api/visitors.list
+        description: List all Visitors
+        events:
+            - httpApi:
+                  path: /visitors-api
+                  method: GET
+
+    visitorsDetails:
+        handler: api/visitors.get
+        description: GET the Visitor
+        events:
+            - httpApi:
+                  path: /visitors-api/{id}
+                  method: GET
+
+    visitorsPut:
+        handler: api/visitors.put
+        description: PUT the Visitor.
+        events:
+            - httpApi:
+                  path: /visitors-api/{id}
+                  method: PUT
+
+    visitorsDelete:
+        handler: api/visitors.delete
+        description: DELETE the Visitor
+        events:
+            - httpApi:
+                  path: /visitors-api/{id}
+                  method: DELETE
+
+resources:
+    Resources:
+        VisitorsDynamoDbTable:
+            Type: 'AWS::DynamoDB::Table'
+            DeletionPolicy: Retain
+            Properties:
+                AttributeDefinitions:
+                    - AttributeName: 'id'
+                      AttributeType: 'S'
+                KeySchema:
+                    - AttributeName: 'id'
+                      KeyType: 'HASH'
+                ProvisionedThroughput:
+                    ReadCapacityUnits: 1
+                    WriteCapacityUnits: 1
+                StreamSpecification:
+                    StreamViewType: 'NEW_AND_OLD_IMAGES'
+                TableName: ${self:provider.environment.VISITORS_TABLE}
